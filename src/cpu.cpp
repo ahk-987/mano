@@ -31,11 +31,9 @@ class simulator{
         
         inline  auto ADD(uint16_t Adr,bool indirect)
         {
-            std::println("AC add{} adr {}",AC,Adr);
             TR=AC;
             AC+=(indirect?ram[ram[Adr]]:ram[Adr]);
             E=TR>AC?1:0;
-            std::println("AC add{}",AC);
         }
         inline  auto LDA(uint16_t Adr,bool indirect)
         {
@@ -46,8 +44,6 @@ class simulator{
             if(indirect)
             {ram[ram[Adr]]=AC;}
             else ram[Adr]=AC;
-            std::println("AC {}",AC);
-            std::println("ram {}",ram[Adr]);
         }
         inline  auto BUN(uint16_t Adr,bool indirect)
         {
@@ -145,12 +141,6 @@ class simulator{
         auto run(){
             bool indirect;
             while(!hlt){
-                if(PC>4095)
-                {
-                    std::println("overflow pc !!");
-                    hlt=1;
-                    break;
-                }
                 AR=PC++;
                 IR=ram[AR];
                 indirect=IR>>15;//should provide us msb only (indirect check)
@@ -159,7 +149,6 @@ class simulator{
                 if(command==0x7)
                 {
                     register_reference(IR);
-                    std::println("exec regref");
                     continue;
                 }
                 if(command==0xF)
@@ -169,9 +158,7 @@ class simulator{
                 }
                 else{
                         memory_reference(command, AR, indirect);
-                        std::println("exec memref");
                 }
-                std::println("exec ins{}",IR);
             }
         }
     };

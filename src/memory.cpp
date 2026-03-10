@@ -83,7 +83,8 @@
                         temp>>generalstr;
                         if(generalstr=="ORG" || generalstr =="org")
                         {
-                            temp>>generaluint16;
+                            temp>>std::hex>>generaluint16;
+                            temp>>std::dec;
                         }
                         curr_mem_pointer=generaluint16>=ram_size-1?throw std::out_of_range("Origin can not be at last index!!"):generaluint16;
                         continue;
