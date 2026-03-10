@@ -68,7 +68,7 @@
     }
     void memory::load_instruction(std::string filenm)
     {
-        
+        std::println("load ins");
         uint16_t curr_mem_pointer=0;
         auto input = std::ifstream() ;
         input.open(filenm);
@@ -115,12 +115,12 @@
         }
         generalint=curr_mem_pointer;
        // std::println("in load {}",generalint);
-    }
-    auto memory::printRam(){
-    for(int i=0;i<ram_used();i++)
-    {
-        std::println("{} : {} ",i,ram[i]); 
+    // }
+    // auto memory::printRam(){
+    // for(int i=0;i<ram_used();i++)
+    // {
+    //     std::println("{} : {} ",i,ram[i]); 
 
-    }
+    // }
 }
 

@@ -1,0 +1,9 @@
+;This is basic add 2 number program
+ORG 0
+1100
+1101
+3102
+7001
+ORG 100
+0010
+0020
