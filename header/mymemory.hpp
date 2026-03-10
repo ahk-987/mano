@@ -9,7 +9,7 @@ class memory
     private:
     static constexpr int ram_size = 4096;
     uint16_t ram[ram_size]{};
-
+auto printRam();
 int generalint;
 
 uint16_t generaluint16;
@@ -24,6 +24,7 @@ std::string generalstr;
 
 
 public:
+auto ram_to_file(std::string filenm,bool all)-> void;
 
 auto ram_used()->int;
 
@@ -31,7 +32,7 @@ uint16_t& operator[](int index);
 
 
 void load_instruction(std::string filenm);
-
+~memory();
 
 };
 
