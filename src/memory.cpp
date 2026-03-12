@@ -1,5 +1,4 @@
 #include "../header/mymemory.hpp"
-#include "RequiredFn.cpp"
 #include <cstdio>
 #include <exception>
 #include <filesystem>
@@ -13,6 +12,7 @@
 
     auto memory::ram_to_file(std::string filenm,bool all=false)->void
     {
+        std::print("{}",std::filesystem::exists(filenm)?("Input File :"+filenm+"Not Found\n"):"");
         std::string formattedstr;
         std::string loc_ram_state;
         std::ofstream output;
@@ -68,7 +68,7 @@
     }
     void memory::load_instruction(std::string filenm)
     {
-        std::println("load ins");
+        std::print("{}",std::filesystem::exists(filenm)?("Input File :"+filenm+"Not Found\n"):"");
         uint16_t curr_mem_pointer=0;
         auto input = std::ifstream() ;
         input.open(filenm);
@@ -110,6 +110,7 @@
                 std::cout<< "Error ig :( file not end proper"<<std::endl;
             }
         input.close();
+        failed_load_file=false;
         }
         else{
             std::cout << "Error FILE =>"<< filenm<<" could not be open :("<<std::endl;

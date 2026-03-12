@@ -1,25 +1,16 @@
-#include "RequiredFn.cpp"
 #include "cpu.cpp"
 #include "../header/mymemory.hpp"
-#include<filesystem>
-#include <iostream>
 #include <unistd.h>
-auto main (void)
+auto main (int kwargs,char *args[])
 -> int
 {
+    parser;
     memory ram= memory();
-    //std::println("Start");
-    auto temp=std::filesystem::exists("IO/asmano1.txt");
-    std::cout<<"Exists?"<<(temp?"yes":"no")<<std::endl;
-    ram.load_instruction("IO/asmano1.txt");
+    ram.load_instruction("mano/IO/asmano1.txt");
 
     simulator manocpu=simulator(0,ram);
-    sleep(1);
     manocpu.run();
-
-    auto temp2=std::filesystem::exists("IO/ramstate.txt");
-    std::cout<<"Exists?"<<(temp2?"yes":"no")<<std::endl;
+    manocpu.registry_to_file("mano/IO/registers.txt");
     ram.ram_to_file("IO/ramstate.txt",false);
-    //std::println("End");
     return 0;
 }

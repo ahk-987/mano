@@ -9,21 +9,22 @@ class memory
     private:
     static constexpr int ram_size = 4096;
     uint16_t ram[ram_size]{};
-auto printRam();
-int generalint;
-
-uint16_t generaluint16;
-char generalchar;
-
-[[maybe_unused]]
-size_t generalulong;
-
-[[maybe_unused]]
-
-std::string generalstr;
-
-
-public:
+    int generalint;
+    
+    uint16_t generaluint16;
+    char generalchar;
+    
+    [[maybe_unused]]
+    size_t generalulong;
+    
+    [[maybe_unused]]
+    
+    std::string generalstr;
+    
+    
+    public:
+    bool failed_load_file=true;
+    auto printRam();
 auto ram_to_file(std::string filenm,bool all)-> void;
 
 auto ram_used()->int;

@@ -1,6 +1,8 @@
 #include "../header/mymemory.hpp"
+#include <fstream>
 #include <print>
-#include <cstdint>
+#include <filesystem>
+#include <string>
 class simulator{
  
     uint16_t IR=0;
@@ -12,17 +14,6 @@ class simulator{
     memory ram ;
     bool E=false;
     bool hlt=0;
-    public :
-    simulator()
-    {
-        ram=memory();
-    }
-    simulator(uint16_t orginLoc,memory &ram_module)
-    {
-        PC=orginLoc;
-        ram=ram_module;
-        std::println("pc{}",PC);
-    }
     
         inline  auto AND(uint16_t Adr,bool indirect)
         {
@@ -110,7 +101,7 @@ class simulator{
         }
         auto memory_reference(uint8_t command,uint16_t AR,bool indirect)
         {
-
+    
                 switch (command&0x7) {//leaves out 4th bit the indirect bit  
                     case 0:
                         AND(AR,indirect);
@@ -137,6 +128,30 @@ class simulator{
                         std::println("Why are You here ? memref default");
                 }
     
+        }
+    public :
+    
+    simulator()
+    {
+        ram=memory();
+    }
+    simulator(uint16_t orginLoc,memory &ram_module)
+    {
+        PC=orginLoc;
+        ram=ram_module;
+        ram.failed_load_file?throw "Failed To Load Ram properly":0;
+    }
+        auto registry_to_file(std::string filenm)
+        {
+            std::print("{}",std::filesystem::exists(filenm)?("Input File :"+filenm+"Not Found\n"):"");
+
+            auto regfile = std::fstream(filenm);
+            regfile<<std::hex<<"IR"<<IR<<std::endl;
+            regfile<<"AC"<<AC<<std::endl;
+            regfile<<"AR"<<AR<<std::endl;
+            regfile<<"PC"<<PC<<std::endl;
+            regfile<<"E"<<E<<std::endl;
+            regfile<<"HLT"<<hlt<<std::endl;
         }
         auto run(){
             bool indirect;

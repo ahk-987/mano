@@ -10,7 +10,7 @@ target_sources(mano.out PRIVATE
     src/memory.cpp
     src/cpu.cpp
     src/main.cpp
-    src/RequiredFn.cpp
+    src/Cli_parser.cpp
 )
 target_compile_features ( mano.out PRIVATE
     cxx_std_26
