@@ -4,7 +4,7 @@
 auto main (int kwargs,char *args[])
 -> int
 {
-    parser;
+   // parser;
     memory ram= memory();
     ram.load_instruction("mano/IO/asmano1.txt");
 

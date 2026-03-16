@@ -147,11 +147,12 @@ class simulator{
 
             auto regfile = std::fstream(filenm);
             regfile<<std::hex<<"IR"<<IR<<std::endl;
-            regfile<<"AC"<<AC<<std::endl;
-            regfile<<"AR"<<AR<<std::endl;
-            regfile<<"PC"<<PC<<std::endl;
-            regfile<<"E"<<E<<std::endl;
-            regfile<<"HLT"<<hlt<<std::endl;
+            regfile<<"AC  : "<<AC<<std::endl;
+            regfile<<"AR  : "<<AR<<std::endl;
+            regfile<<"PC  : "<<PC<<std::endl;
+            regfile<<"E   : "<<E<<std::endl;
+            regfile<<"HLT : "<<hlt<<std::endl;
+            regfile.close();
         }
         auto run(){
             bool indirect;
@@ -175,6 +176,7 @@ class simulator{
                         memory_reference(command, AR, indirect);
                 }
             }
+            
         }
     };
     
