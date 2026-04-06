@@ -2,23 +2,25 @@
 #define CLI_PARSER_MANO
 
 #include "mymemory.hpp"
-#include <exception>
+#include "file_handler.hpp"
 #include <string>
 class parser
 {
     private:
+    simulator  cpu;
+    memory ram;
+    file_io file_handler;
     std::string input_file;
     std::string output_file;
     std::string error_file;
     std::string register_file;
-    auto help();
-    auto chk_file_exists(std::string filenm)
-    ->bool;
+    int input_order;
+    int requested_input_cnt;
+    auto  static help();
     auto list_commands(int options);
-    auto error();
+    auto error(std::string);
     public:
     parser(int kwargs,char *args[]);
-    auto run(bool debug = false);    
 };
 
 #endif

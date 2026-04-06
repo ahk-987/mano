@@ -1,10 +1,11 @@
+#ifndef CPU_CPP_FILE
+#define CPU_CPP_FILE
+
 #include "../header/mymemory.hpp"
-#include <fstream>
 #include <print>
-#include <filesystem>
-#include <string>
 class simulator{
  
+    public:
     uint16_t IR=0;
     uint16_t AC =0;
     uint16_t TR = 0;//no DR as did nt felt it will be required TR is temparory register
@@ -139,21 +140,7 @@ class simulator{
     {
         PC=orginLoc;
         ram=ram_module;
-        ram.failed_load_file?throw "Failed To Load Ram properly":0;
     }
-        auto registry_to_file(std::string filenm)
-        {
-            std::print("{}",std::filesystem::exists(filenm)?("Input File :"+filenm+"Not Found\n"):"");
-
-            auto regfile = std::fstream(filenm);
-            regfile<<std::hex<<"IR"<<IR<<std::endl;
-            regfile<<"AC  : "<<AC<<std::endl;
-            regfile<<"AR  : "<<AR<<std::endl;
-            regfile<<"PC  : "<<PC<<std::endl;
-            regfile<<"E   : "<<E<<std::endl;
-            regfile<<"HLT : "<<hlt<<std::endl;
-            regfile.close();
-        }
         auto run(){
             bool indirect;
             while(!hlt){
@@ -176,7 +163,8 @@ class simulator{
                         memory_reference(command, AR, indirect);
                 }
             }
-            
+
         }
     };
+#endif
     

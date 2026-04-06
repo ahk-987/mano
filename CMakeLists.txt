@@ -11,6 +11,7 @@ target_sources(mano.out PRIVATE
     src/cpu.cpp
     src/main.cpp
     src/Cli_parser.cpp
+    src/file_handler.cpp
 )
 target_compile_features ( mano.out PRIVATE
     cxx_std_26
