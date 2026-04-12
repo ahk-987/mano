@@ -3,8 +3,10 @@
 
 #include "mymemory.hpp"
 #include "../src/cpu.cpp"
+#include <cstdint>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 class file_io
 {
     bool stdio_only,all_ram_loc;
@@ -34,6 +36,10 @@ class file_io
         HEXCODE_FILE,
         ERROR_FILE
     };
+    // Please look at it idk why but please correct it future me
+    //ig 
+    
+    const static std::unordered_map<std::string, uint16_t> NON_MRI,MRI ;
 
     file_io();
     file_io( simulator cpu,memory ram);//default case stdio-only case
