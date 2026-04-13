@@ -1,5 +1,4 @@
 #include "../header/Cli_parser.hpp"
-#include <climits>
 #include <cstring>
 #include <print>
 
@@ -21,16 +20,17 @@ auto parser::help()
     std::println("Currently IO operation is not supported");
     std::println("Use args as -arg PATH eg : -i PATH/TO/File.txt \n Use .txt as extensions\n");
 }
-parser::parser(int kwargs, char *args[])
+parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
 {
-    ram=memory();
-    cpu=simulator(0,ram);
-    file_handler=file_io(cpu,ram);
+    bool improper_args=false;
     bool force_break=false;
-    for(int i = 0;i<kwargs;i++)
+    if(kwargs<2) return;
+    for(int i = 1;i<kwargs;i++)
     {
+        std::println("IN loop {}",args[i]);
         if(force_break)
         {
+            std::println("Break");
             break;
         }
         if(args[i][0]=='-')
@@ -38,19 +38,22 @@ parser::parser(int kwargs, char *args[])
             switch(args[i][1])
             {
                 case 'i':
-                    if(args[i+1][0]!='-')
+                    if(i+1<kwargs&&args[i+1][0]!='-')
                     {
                         file_handler.set_files_nm(args[++i], file_io::INPUT_FILE);
                     }
-                    i++;
+                    else{
+                        improper_args=true;
+                        std::println("Missing Argument for input file");
+                    }
                     break;
                     /* 
                         next argument is taken as input file
                     */
                 case 'o':
-                 if(args[i+1][0]!='-')
+                    if(i+1<kwargs&&args[i+1][0]!='-')
                     {
-                        if(args[i][2]=='a')
+                        if(strlen(args[i])>2 && args[i][2]=='a')
                         {
                             file_handler.set_files_nm(args[++i], file_io::OUTPUT_FILE_SHOW_ALL);
                         }
@@ -58,25 +61,41 @@ parser::parser(int kwargs, char *args[])
                             file_handler.set_files_nm(args[++i], file_io::OUTPUT_FILE);
                         }
                     }
+                    else{
+                        improper_args=true;
+                        std::println("Missing Argument for output file");
+                    }
                     break;
                     
                 case 'r':
-                     if(args[i+1][0]!='-')
+                    if(i+1<kwargs&&args[i+1][0]!='-')
                     {
                         file_handler.set_files_nm(args[++i], file_io::REGISTER_FILE);
+                    }
+                    else{
+                        improper_args=true;
+                        std::println("Missing Argument for registry file");
                     }
                     break;
                     
                 case 'e'://not properly setup yet but future ig idk?
-                     if(args[i+1][0]!='-')
+                    if(i+1<kwargs&&args[i+1][0]!='-')
                     {
                         file_handler.set_files_nm(args[++i], file_io::ERROR_FILE);
                     }
+                    else{
+                        improper_args=true;
+                        std::println("Missing Argument for error file");
+                    }
                     break;
                 case 'c': 
-                    if(args[i+1][0]!='-')
+                    if(i+1<kwargs&&args[i+1][0]!='-')
                     {
                         file_handler.set_files_nm(args[++i], file_io::HEXCODE_FILE);
+                    }
+                    else{
+                        improper_args=true;
+                        std::println("Missing Argument for Hexcode file");
                     }
                     break;
                 case 'h':
@@ -84,12 +103,17 @@ parser::parser(int kwargs, char *args[])
                     force_break=true;
                     break;
                 case '-':
-                    if (std::strcmp(args[i],"--stdio-only"))
+                    if (std::strcmp(args[i],"--stdio-only")==0)
                     {
-                        input_order=INT_MIN;
+                        file_handler.set_stdio(true);
                     }
-                    else if(std::strcmp(args[i],"--help"))
+                    else if(std::strcmp(args[i],"--help")==0)
                     {
+                        help();
+                        force_break=true;
+                    }
+                    else{
+                        std::println("Improper Argument: {}",args[i]);
                         help();
                         force_break=true;
                     }
@@ -99,5 +123,16 @@ parser::parser(int kwargs, char *args[])
                     force_break=true;
             }
         }
-        }   
+        else{
+            help();
+            force_break=true;
+        }
+    }   
+    if((force_break)||improper_args)
+    {
+        std::println("Errors in arguments cant execute");
+    }
+    else{
+        file_handler.run();
+    }
 }

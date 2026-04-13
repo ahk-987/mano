@@ -49,21 +49,16 @@ const std::unordered_map<std::string, uint16_t> file_io::NON_MRI = {
         {"ION",0xF080},
         {"IOF",0xF040}
     };
-file_io::file_io(simulator cpu, memory ram) {
-  this->cpu = cpu;
-  this->ram = ram;
+file_io::file_io(simulator &cpu, memory &ram):cpu(cpu),ram(ram) {
+  
   input_file = hexcode_file = output_file = register_file =
       ""; // empty intitalise
 }
 
-file_io::file_io() {
-  /*Idk why there was some wierd issues of sorts so creating empty constructor
-   * :(*/
-}
 
 auto file_io::registry_to_file() {
   auto file = std::ofstream(register_file);
-  auto &regfile = stdio_only ? file : std::cout;
+  auto &regfile = stdio_only ? std::cout:file;
   regfile << std::hex << "IR  : " << cpu.IR << std::endl;
   regfile << "AC  : " << cpu.AC << std::endl;
   regfile << "AR  : " << cpu.AR << std::endl;
@@ -78,7 +73,7 @@ auto file_io::ram_to_file() {
   std::string formattedstr;
   std::string loc_ram_state;
   std::ofstream file(output_file);
-  auto &output = stdio_only ? file : std::cout;
+  auto &output = stdio_only ? std::cout:file;
   if (stdio_only) {
     output << "\t  RAM  \t " << (all_ram_loc ? "[  all  ]" : "[not all]")
            << std::endl;
@@ -113,8 +108,8 @@ auto file_io::load_instruction_to_ram() {
   uint16_t curr_mem_pointer = 0;
   auto file = std::fstream(hexcode_file);
   std::istream &input = stdio_only
-                            ? static_cast<std::istream &>(file)
-                            : static_cast<std::istream &>(hexcode_stream);
+                            ? static_cast<std::istream &>(hexcode_stream)
+                            : static_cast<std::istream &>(file);
   while ((input >> generalstr)) {
     if (generalstr.starts_with('O')) {
       std::istringstream temp(generalstr);
@@ -153,7 +148,7 @@ auto file_io::set_files_nm(std::string filenm, filetype type) -> void {
     break;
   case INPUT_FILE:
     if (!std::filesystem::exists(filenm)) {
-      throw std::string("This File does not Exist : filenm");
+      throw std::string("This File does not Exist : "+filenm);
     }
     input_file = filenm;
     break;
@@ -181,8 +176,7 @@ auto file_io::input_from_file() {
   auto assembly_file_stream = std::ifstream(filenm);
   if (stdio_only) // get user input and save it to a stream for doing parsing
   {
-    std::println("Enter Your assembly Code Below : (chatgpt says ctrl+D to "
-                 "exit idk bro i fool in this point )");
+    std::println("Enter Your assembly Code Below [Use ctrl+d to complete]: ");
     while (std::getline(std::cin, generalstr)) {
       stdinput << generalstr << std::endl;
     }
@@ -201,7 +195,7 @@ auto file_io::input_from_file() {
     std::stringstream str_line_stream;
     while(std::getline(assembly,generalstr_pass)&&end_pass_bool)
     {
-        std::transform(generalstr_pass.begin(),generalstr_pass.end(),generalstr_pass.begin(),[](unsigned char c ){return std::tolower(c);});
+        std::transform(generalstr_pass.begin(),generalstr_pass.end(),generalstr_pass.begin(),[](unsigned char c ){return std::toupper(c);});
         //This is to not mind any content after comment sign ";" 
         int loc_str_tmp=generalstr_pass.find(';');
         loc_str_tmp!=std::string::npos?generalstr_pass.erase(loc_str_tmp):"";//"" for ternary operation
@@ -212,17 +206,16 @@ auto file_io::input_from_file() {
 
         while(end_pass_bool&&(str_line_stream>>generalstr_pass))
         {
-          if(!(MRI.contains(generalstr_pass)&&(NON_MRI.contains(generalstr_pass))))
+          if(!MRI.contains(generalstr_pass)&&!NON_MRI.contains(generalstr_pass))
           {
-        auto assembly_file_stream = std::ifstream(filenm);
-      if(generalstr_pass=="ORG")
+          if(generalstr_pass=="ORG")
             {
               size_t pos;
               uint16_t templocint;
               str_line_stream>>generalstr_pass;
               auto [temp_ptr_fpass,temp_ec_fpass]=std::from_chars(generalstr_pass.data(),generalstr_pass.data()+generalstr_pass.size(),templocint,16);
               //Here i am checking if address passed in is in format or like proper 
-              if((temp_ec_fpass!=std::errc())&&temp_ptr_fpass-generalstr_pass.data()!=generalstr_pass.size()&&(templocint>0xFFE))
+              if((temp_ec_fpass!=std::errc())||temp_ptr_fpass-generalstr_pass.data()!=generalstr_pass.size()||(templocint>0xFFE))
               {
                 std::println("Error invalid Address at index : {}",curr_mem_pointer);
               }
@@ -230,11 +223,11 @@ auto file_io::input_from_file() {
                 curr_mem_pointer=templocint;
               }
             }
-      else if(generalstr_pass=="END")
+          else if(generalstr_pass=="END")
             {
               end_pass_bool=false;
             }
-      else {
+          else {
               bool chk_label_add_loc=false;
               if(generalstr_pass.ends_with(',')){
                 generalstr_pass.pop_back();
@@ -251,7 +244,7 @@ auto file_io::input_from_file() {
                   str_line_stream.seekg(temp_pos);
                 }
               }
-              if(std::all_of(generalstr_pass.begin(),generalstr_pass.end(),[](unsigned char c){return std::isalnum(c)||c=='_';}))
+              if(!std::all_of(generalstr_pass.begin(),generalstr_pass.end(),[](unsigned char c){return std::isalnum(c)||c=='_';}))
               {
                 std::println("Invalid Label used at [{}] label used is {}",curr_mem_pointer,generalstr_pass);
               }
@@ -271,7 +264,7 @@ auto file_io::input_from_file() {
        curr_mem_pointer++;//increase LC 
     }
     if(std::any_of( labels.begin(), labels.end(),
-    [](const auto& p) { return p.second < 0; }))
+    [](const auto& p) { return p.second == 0xFFFF; }))
     {
       std::println("There are undefined Labels in the {} code",stdio_only?"assembly entered":"file:"+input_file);
     }
@@ -283,15 +276,19 @@ auto file_io::input_from_file() {
     */
     end_pass_bool=true;
     bool hlt_found_chk=false;
+    bool valid_instruction=false;
     std::string adr_label,tempstr;
     uint16_t gen_hexcode;
+    assembly.clear();
+    assembly.seekg(0);
     hexcode_stream=std::stringstream();//empty init to use now
 
     curr_mem_pointer=0;//reset LC 
     while(std::getline(assembly,generalstr_pass)&&end_pass_bool)
     {
-        std::transform(generalstr_pass.begin(),generalstr_pass.end(),generalstr_pass.begin(),[](unsigned char c ){return std::tolower(c);});
+        std::transform(generalstr_pass.begin(),generalstr_pass.end(),generalstr_pass.begin(),[](unsigned char c ){return std::toupper(c);});
 
+        gen_hexcode=0;
         int loc_str_tmp=generalstr_pass.find(';');
         loc_str_tmp!=std::string::npos?generalstr_pass.erase(loc_str_tmp):"";//"" for ternary operation
         //Above remove anything after comment
@@ -316,6 +313,7 @@ auto file_io::input_from_file() {
               else{
                 str_line_stream.seekg(temp_pos_chk_i);//set it back to normal if no I
               }
+              valid_instruction=true;
             }
             else{
               std::println("Invalid label Provided for a MRI instruction[{}] at [{}] label found as [{}] ",generalstr_pass,curr_mem_pointer,adr_label);
@@ -328,6 +326,7 @@ auto file_io::input_from_file() {
             {
               hlt_found_chk=true;
             }
+            valid_instruction=true;
           }
           else if(generalstr_pass=="ORG")
           {
@@ -336,16 +335,14 @@ auto file_io::input_from_file() {
               str_line_stream>>generalstr_pass;
               auto [temp_ptr_fpass,temp_ec_fpass]=std::from_chars(generalstr_pass.data(),generalstr_pass.data()+generalstr_pass.size(),templocint,16);
               //Here i am checking if address passed in is in format or like proper 
-              if((temp_ec_fpass!=std::errc())&&temp_ptr_fpass-generalstr_pass.data()!=generalstr_pass.size()&&(templocint>0xFFFE))
+              if((temp_ec_fpass!=std::errc())||temp_ptr_fpass-generalstr_pass.data()!=generalstr_pass.size()||(templocint>0xFFFE))
               {
                 std::println("Error invalid Address at index retelling from second pass: {}",curr_mem_pointer);
               }
               else{
-                hexcode_stream<<"ORG";
-                gen_hexcode=templocint;
+                hexcode_stream<<"ORG"<<std::hex<<templocint<<std::dec<<'\n';
                 curr_mem_pointer=templocint;
               }
-              
           }
           else if(generalstr_pass=="END")
           {
@@ -360,6 +357,7 @@ auto file_io::input_from_file() {
             if(temp_pos == tempstr.size()&&temp_result<=0xFFFF)
             {
               gen_hexcode=static_cast<uint16_t>(temp_result);//store hex value 
+              valid_instruction=true;
             }
             else{
               std::println("Invalid HEX Value is provided");
@@ -368,15 +366,18 @@ auto file_io::input_from_file() {
           else if(generalstr_pass=="DEC")
           {
             str_line_stream>>tempstr;
-            size_t temp_result,temp_pos;
+            int temp_result;
+            size_t temp_pos;
             temp_result=std::stoi(tempstr,&temp_pos,10);
             if(temp_pos == tempstr.size()&&temp_result<=0xFFFF)
             {
               gen_hexcode=static_cast<uint16_t>(temp_result);//store dec value 
+              valid_instruction=true;
             }
           }
           else      //all other cases like labels and invalid somehow
           {
+            generalstr_pass.back()==','?generalstr_pass.pop_back():void();
             if(labels.contains(generalstr_pass)&&labels.at(generalstr_pass)==(0xFFFF))
             {
               std::println("The following label is undefined [{}] at [{}]",generalstr_pass,curr_mem_pointer);
@@ -388,8 +389,31 @@ auto file_io::input_from_file() {
             //no else case that case is simply the labels is normal and exists
           }
         }
-        hexcode_stream<<std::hex<<gen_hexcode<<std::dec<<std::endl;
-        curr_mem_pointer++;
+        if(valid_instruction){
+          hexcode_stream<<std::hex<<gen_hexcode<<std::dec<<std::endl;
+          curr_mem_pointer++;
+        }
+        valid_instruction=false;
       }
 
+}
+
+void file_io::set_stdio(bool stdio)
+{
+  stdio_only=stdio;
+}
+void file_io::run()
+{
+  std::println("In Run of fileio");
+  input_from_file();
+  std::println("Loaded from file ");
+  load_instruction_to_ram();
+  ram_to_file();
+  registry_to_file();
+  std::println("Loaded instruction to ram ");
+  cpu.run();
+  std::println("End of fileiorun");
+  ram_to_file();
+  registry_to_file();
+  std::println("file printed ");
 }

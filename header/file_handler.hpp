@@ -10,8 +10,8 @@
 class file_io
 {
     bool stdio_only,all_ram_loc;
-    simulator cpu;
-    memory ram;
+    simulator &cpu;
+    memory &ram;
     std::stringstream hexcode_stream;//use if stdio only to store hexcode for later processing
     std::string input_file,output_file,register_file,hexcode_file,error_file;
     /* This is extra idk why i made them lol*/
@@ -36,19 +36,18 @@ class file_io
         HEXCODE_FILE,
         ERROR_FILE
     };
-    // Please look at it idk why but please correct it future me
-    //ig 
-    
     const static std::unordered_map<std::string, uint16_t> NON_MRI,MRI ;
 
     file_io();
-    file_io( simulator cpu,memory ram);//default case stdio-only case
+    file_io( simulator &cpu,memory &ram);//default case stdio-only case
     auto set_files_nm(std::string filenm,filetype type)->void;//to set file name 
     auto ram_to_file();
     auto registry_to_file();
     auto hexcode_to_file();
     auto load_instruction_to_ram();
     auto input_from_file();
+    void run();
+    void set_stdio(bool stdio);
 
 };
 #endif

@@ -7,8 +7,8 @@
 class parser
 {
     private:
-    simulator  cpu;
     memory ram;
+    simulator  cpu;
     file_io file_handler;
     std::string input_file;
     std::string output_file;

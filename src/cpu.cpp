@@ -12,7 +12,7 @@ class simulator{
     uint16_t AR =0;
     uint16_t PC =0;
     uint8_t command=0;//to store instruction
-    memory ram ;
+    memory &ram ;
     bool E=false;
     bool hlt=0;
     
@@ -132,18 +132,13 @@ class simulator{
         }
     public :
     
-    simulator()
-    {
-        ram=memory();
-    }
-    simulator(uint16_t orginLoc,memory &ram_module)
+    simulator(uint16_t orginLoc,memory &ram_module):PC(orginLoc),ram(ram_module)
     {
         PC=orginLoc;
-        ram=ram_module;
     }
         auto run(){
             bool indirect;
-            while(!hlt){
+            while(!hlt&&PC<4096){
                 AR=PC++;
                 IR=ram[AR];
                 indirect=IR>>15;//should provide us msb only (indirect check)

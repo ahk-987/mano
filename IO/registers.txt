@@ -1,6 +1,6 @@
-IR7001
-AC  : 30
-AR  : 1
-PC  : 5
+IR  : 0
+AC  : 0
+AR  : 0
+PC  : 1000
 E   : 0
-HLT : 1
+HLT : 0

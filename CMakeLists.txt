@@ -4,20 +4,20 @@ project(mano
     LANGUAGES CXX ASM
     DESCRIPTION "mano"
 )
-add_executable(mano.out)
+add_executable(mano)
 
-target_sources(mano.out PRIVATE
+target_sources(mano PRIVATE
     src/memory.cpp
     src/cpu.cpp
     src/main.cpp
     src/Cli_parser.cpp
     src/file_handler.cpp
 )
-target_compile_features ( mano.out PRIVATE
+target_compile_features ( mano PRIVATE
     cxx_std_26
 )
 
-target_compile_options ( mano.out PRIVATE
+target_compile_options ( mano PRIVATE
     $<$<CXX_COMPILER_ID:Clang>: 
     # this now only works for the clang compiler
         

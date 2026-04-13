@@ -1,14 +1,17 @@
 A Simple Mano Simulator
-Input : takes HEX code instructions and origin as "ORG hex_address"
-OUTPUT : RamState file containing current ramstate after execution
+Currently :
+Works with --stdio-only flag mostly 
+Write input end input with ctrl+d
+it provides you ramstate and register values
 
-how to run :
-compile program via cmake 
-Write your program Hex Commands to asmano1.txt
-run from directory as ```./build/mano.out ```
-view changed ram blocks in ramstate.txt
-show Registers in a register file
+file is not properly working or checked 
+It works mostly in any case 
+Can be used 
 
-TO DO: 
-try to provide support for input /output functions
-provide a cli for ease of use 
+Goals :
+Provide some way to do IO functions (Not yet supported )
+Error handling ?(currently just prints error )
+Handle Bugs and errors 
+
+NOTE : it doesnt exactly execute the fetch-decode-execute cycle
+It justs directly performs them 
