@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -117,7 +119,7 @@ auto file_io::load_instruction_to_ram() {
     if (generalstr.starts_with('O')) {
       std::istringstream temp(generalstr);
       temp >> generalstr;
-      if (generalstr == "ORG" || generalstr == "org") {
+      if (generalstr == "ORG" ) {
         temp >> std::hex >> generaluint16; // set location counter to ORG
         temp >> std::dec;
       }
@@ -174,9 +176,8 @@ auto file_io::set_files_nm(std::string filenm, filetype type) -> void {
 }
 
 auto file_io::input_from_file() {
-  std::string generalstr_fpass,filenm = input_file;
+  std::string generalstr_pass,filenm = input_file;
   std::stringstream stdinput; // store input from cli for future parsing
-  std::stringstream hexcode_stream; // stores hexcode_stream in case of stdio_only case
   auto assembly_file_stream = std::ifstream(filenm);
   if (stdio_only) // get user input and save it to a stream for doing parsing
   {
@@ -194,33 +195,34 @@ auto file_io::input_from_file() {
   
 
   /*First Pass of assembler*/
-    int curr_mem_pointer=0;
+    uint16_t curr_mem_pointer=0;
     bool end_pass_bool=true;
-    std::unordered_map<std::string, int> labels;
+    std::unordered_map<std::string, uint16_t> labels;
     std::stringstream str_line_stream;
-    while(std::getline(assembly,generalstr_fpass)&&end_pass_bool)
+    while(std::getline(assembly,generalstr_pass)&&end_pass_bool)
     {
-        std::transform(generalstr_fpass.begin(),generalstr_fpass.end(),generalstr_fpass.begin(),[](unsigned char c ){return std::tolower(c);});
+        std::transform(generalstr_pass.begin(),generalstr_pass.end(),generalstr_pass.begin(),[](unsigned char c ){return std::tolower(c);});
         //This is to not mind any content after comment sign ";" 
-        int loc_str_tmp=generalstr_fpass.find(';');
-        loc_str_tmp!=std::string::npos?generalstr_fpass.erase(loc_str_tmp):"";//"" for ternary operation
+        int loc_str_tmp=generalstr_pass.find(';');
+        loc_str_tmp!=std::string::npos?generalstr_pass.erase(loc_str_tmp):"";//"" for ternary operation
         //Above remove anything after comment
 
   
-        str_line_stream=std::stringstream(generalstr_fpass);
+        str_line_stream=std::stringstream(generalstr_pass);
 
-        while(end_pass_bool&&(str_line_stream>>generalstr_fpass))
+        while(end_pass_bool&&(str_line_stream>>generalstr_pass))
         {
-          if(!(MRI.contains(generalstr_fpass)&&(NON_MRI.contains(generalstr_fpass))))
+          if(!(MRI.contains(generalstr_pass)&&(NON_MRI.contains(generalstr_pass))))
           {
-            if(generalstr_fpass=="ORG")
+        auto assembly_file_stream = std::ifstream(filenm);
+      if(generalstr_pass=="ORG")
             {
               size_t pos;
-              int templocint;
-              str_line_stream>>generalstr_fpass;
-              auto [temp_ptr_fpass,temp_ec_fpass]=std::from_chars(generalstr_fpass.data(),generalstr_fpass.data()+generalstr_fpass.size(),templocint,16);
+              uint16_t templocint;
+              str_line_stream>>generalstr_pass;
+              auto [temp_ptr_fpass,temp_ec_fpass]=std::from_chars(generalstr_pass.data(),generalstr_pass.data()+generalstr_pass.size(),templocint,16);
               //Here i am checking if address passed in is in format or like proper 
-              if((temp_ec_fpass!=std::errc())&&temp_ptr_fpass-generalstr_fpass.data()!=generalstr_fpass.size()&&(templocint>0xFFFE))
+              if((temp_ec_fpass!=std::errc())&&temp_ptr_fpass-generalstr_pass.data()!=generalstr_pass.size()&&(templocint>0xFFE))
               {
                 std::println("Error invalid Address at index : {}",curr_mem_pointer);
               }
@@ -228,14 +230,14 @@ auto file_io::input_from_file() {
                 curr_mem_pointer=templocint;
               }
             }
-            else if(generalstr_fpass=="END")
+      else if(generalstr_pass=="END")
             {
               end_pass_bool=false;
             }
-            else {
+      else {
               bool chk_label_add_loc=false;
-              if(generalstr_fpass.ends_with(',')){
-                generalstr_fpass.pop_back();
+              if(generalstr_pass.ends_with(',')){
+                generalstr_pass.pop_back();
                 chk_label_add_loc=true;
               }
               else{
@@ -249,15 +251,16 @@ auto file_io::input_from_file() {
                   str_line_stream.seekg(temp_pos);
                 }
               }
-              // if(!labels.contains(generalstr_fpass)){
-              //   labels["generalstr_fpass"]=-1;
-              // }
+              if(std::all_of(generalstr_pass.begin(),generalstr_pass.end(),[](unsigned char c){return std::isalnum(c)||c=='_';}))
+              {
+                std::println("Invalid Label used at [{}] label used is {}",curr_mem_pointer,generalstr_pass);
+              }
               if(chk_label_add_loc)
               {
-                labels[generalstr_fpass]=curr_mem_pointer;
+                labels[generalstr_pass]=curr_mem_pointer;
               }
-              else if(!labels.contains(generalstr_fpass)){
-                labels[generalstr_fpass]=(-1);
+              else if(!labels.contains(generalstr_pass)){
+                labels[generalstr_pass]=(0xFFFF);
                 //If not yet stored then set to -1 to help flag if never set
               }
             }
@@ -267,7 +270,126 @@ auto file_io::input_from_file() {
 
        curr_mem_pointer++;//increase LC 
     }
+    if(std::any_of( labels.begin(), labels.end(),
+    [](const auto& p) { return p.second < 0; }))
+    {
+      std::println("There are undefined Labels in the {} code",stdio_only?"assembly entered":"file:"+input_file);
+    }
+
     /*End First Pass */
-    
+
+    /*
+      This is Second Pass
+    */
+    end_pass_bool=true;
+    bool hlt_found_chk=false;
+    std::string adr_label,tempstr;
+    uint16_t gen_hexcode;
+    hexcode_stream=std::stringstream();//empty init to use now
+
+    curr_mem_pointer=0;//reset LC 
+    while(std::getline(assembly,generalstr_pass)&&end_pass_bool)
+    {
+        std::transform(generalstr_pass.begin(),generalstr_pass.end(),generalstr_pass.begin(),[](unsigned char c ){return std::tolower(c);});
+
+        int loc_str_tmp=generalstr_pass.find(';');
+        loc_str_tmp!=std::string::npos?generalstr_pass.erase(loc_str_tmp):"";//"" for ternary operation
+        //Above remove anything after comment
+
+        str_line_stream=std::stringstream(generalstr_pass);
+
+        while(end_pass_bool&&(str_line_stream>>generalstr_pass))
+        {
+          if(MRI.contains(generalstr_pass))
+          {
+  
+            str_line_stream>>adr_label;
+            if(labels.contains(adr_label))
+            {
+              gen_hexcode=MRI.at(generalstr_pass)|labels[adr_label];
+              auto temp_pos_chk_i=str_line_stream.tellg();
+              str_line_stream>>tempstr;//check if indirect mode
+              if(tempstr=="I")
+              {
+                gen_hexcode|=0x8000;//set bit15 to 1
+              }
+              else{
+                str_line_stream.seekg(temp_pos_chk_i);//set it back to normal if no I
+              }
+            }
+            else{
+              std::println("Invalid label Provided for a MRI instruction[{}] at [{}] label found as [{}] ",generalstr_pass,curr_mem_pointer,adr_label);
+            }
+          }
+          else if(NON_MRI.contains(generalstr_pass))
+          {
+            gen_hexcode=NON_MRI.at(generalstr_pass);
+            if(generalstr_pass=="HLT")
+            {
+              hlt_found_chk=true;
+            }
+          }
+          else if(generalstr_pass=="ORG")
+          {
+             size_t pos;
+              uint16_t templocint;
+              str_line_stream>>generalstr_pass;
+              auto [temp_ptr_fpass,temp_ec_fpass]=std::from_chars(generalstr_pass.data(),generalstr_pass.data()+generalstr_pass.size(),templocint,16);
+              //Here i am checking if address passed in is in format or like proper 
+              if((temp_ec_fpass!=std::errc())&&temp_ptr_fpass-generalstr_pass.data()!=generalstr_pass.size()&&(templocint>0xFFFE))
+              {
+                std::println("Error invalid Address at index retelling from second pass: {}",curr_mem_pointer);
+              }
+              else{
+                hexcode_stream<<"ORG";
+                gen_hexcode=templocint;
+                curr_mem_pointer=templocint;
+              }
+              
+          }
+          else if(generalstr_pass=="END")
+          {
+            end_pass_bool=false;
+          }
+          else if (generalstr_pass=="HEX")
+          {
+            str_line_stream>>tempstr;
+            size_t temp_pos;
+            int temp_result;
+            temp_result=std::stoi(tempstr, &temp_pos, 16);
+            if(temp_pos == tempstr.size()&&temp_result<=0xFFFF)
+            {
+              gen_hexcode=static_cast<uint16_t>(temp_result);//store hex value 
+            }
+            else{
+              std::println("Invalid HEX Value is provided");
+            }
+          }
+          else if(generalstr_pass=="DEC")
+          {
+            str_line_stream>>tempstr;
+            size_t temp_result,temp_pos;
+            temp_result=std::stoi(tempstr,&temp_pos,10);
+            if(temp_pos == tempstr.size()&&temp_result<=0xFFFF)
+            {
+              gen_hexcode=static_cast<uint16_t>(temp_result);//store dec value 
+            }
+          }
+          else      //all other cases like labels and invalid somehow
+          {
+            if(labels.contains(generalstr_pass)&&labels.at(generalstr_pass)==(0xFFFF))
+            {
+              std::println("The following label is undefined [{}] at [{}]",generalstr_pass,curr_mem_pointer);
+            }
+            else if(!labels.contains(generalstr_pass))
+            {
+              std::println("How ,this is a label that is met with the first time [{}]",generalstr_pass);
+            }
+            //no else case that case is simply the labels is normal and exists
+          }
+        }
+        hexcode_stream<<std::hex<<gen_hexcode<<std::dec<<std::endl;
+        curr_mem_pointer++;
+      }
 
 }
