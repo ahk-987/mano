@@ -182,14 +182,14 @@ auto file_io::input_from_file() {
     stdinput.seekg(0); // To point again to start for reading purposes
   }
   std::istream &assembly =
-      (stdio_only) ? static_cast<std::istream&>(stdinput)
+      (stdio_only||input_file.empty()) ? static_cast<std::istream&>(stdinput)
                    : static_cast<std::istream&>(assembly_file_stream);
   
 
   /*First Pass of assembler*/
     uint16_t curr_mem_pointer=0;
     bool end_pass_bool=true;
-    bool valid_line;
+    bool valid_line=false;
     std::unordered_map<std::string, uint16_t> labels;
     std::stringstream str_line_stream;
     while(std::getline(assembly,generalstr_pass)&&end_pass_bool)
@@ -209,7 +209,7 @@ auto file_io::input_from_file() {
           {
           if(generalstr_pass=="ORG")
             {
-              size_t pos;
+              
               uint16_t templocint;
               str_line_stream>>generalstr_pass;
               auto [temp_ptr_fpass,temp_ec_fpass]=std::from_chars(generalstr_pass.data(),generalstr_pass.data()+generalstr_pass.size(),templocint,16);
@@ -334,7 +334,7 @@ auto file_io::input_from_file() {
           }
           else if(generalstr_pass=="ORG")
           {
-             size_t pos;
+             
               uint16_t templocint;
               str_line_stream>>generalstr_pass;
               auto [temp_ptr_fpass,temp_ec_fpass]=std::from_chars(generalstr_pass.data(),generalstr_pass.data()+generalstr_pass.size(),templocint,16);

@@ -1,7 +1,7 @@
 #ifndef CPU_CPP_FILE
 #define CPU_CPP_FILE
 
-#include "../header/mymemory.hpp"
+#include "mymemory.hpp"
 #include <print>
 class simulator{
  
@@ -44,7 +44,7 @@ class simulator{
         auto BSA(uint16_t Adr,bool indirect)
         {
             ram[indirect?ram[Adr]:Adr]=PC;//store PC to Adr
-            PC = ram[indirect?ram[Adr]:Adr]+1;
+            PC = (indirect?ram[Adr]:Adr)+1;
         }
         inline  auto ISZ(uint16_t Adr,bool indirect)
         {
