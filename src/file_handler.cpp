@@ -415,16 +415,11 @@ void file_io::set_stdio(bool stdio)
 }
 void file_io::run()
 {
-  std::println("In Run of fileio");
   input_from_file();
-  std::println("Loaded from file ");
   load_instruction_to_ram();
   ram_to_file();
   registry_to_file();
-  std::println("Loaded instruction to ram ");
   cpu.run();
-  std::println("End of fileiorun");
   ram_to_file();
   registry_to_file();
-  std::println("file printed ");
 }

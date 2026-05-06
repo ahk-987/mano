@@ -93,7 +93,6 @@ class simulator{
                     break;
                 case 0x7001://HLT
                     hlt=1;
-                    std::println("hlt called");
                     break;
                 default:
                 std::println("Why are You here !! :this is default of regref");

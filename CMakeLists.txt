@@ -8,7 +8,6 @@ add_executable(mano)
 
 target_sources(mano PRIVATE
     src/memory.cpp
-    src/cpu.cpp
     src/main.cpp
     src/Cli_parser.cpp
     src/file_handler.cpp

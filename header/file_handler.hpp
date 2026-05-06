@@ -2,14 +2,14 @@
 #define FILE_HANDLER
 
 #include "mymemory.hpp"
-#include "../src/cpu.cpp"
+#include "cpu.hpp"
 #include <cstdint>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 class file_io
 {
-    bool stdio_only,all_ram_loc;
+    bool stdio_only=false,all_ram_loc=false;
     simulator &cpu;
     memory &ram;
     std::stringstream hexcode_stream;//use if stdio only to store hexcode for later processing

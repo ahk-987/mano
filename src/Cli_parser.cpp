@@ -27,7 +27,6 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
     if(kwargs<2) return;
     for(int i = 1;i<kwargs;i++)
     {
-        std::println("IN loop {}",args[i]);
         if(force_break)
         {
             break;
