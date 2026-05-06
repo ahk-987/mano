@@ -30,7 +30,6 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
         std::println("IN loop {}",args[i]);
         if(force_break)
         {
-            std::println("Break");
             break;
         }
         if(args[i][0]=='-')
@@ -128,11 +127,11 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
             force_break=true;
         }
     }   
-    if((force_break)||improper_args)
+    if(improper_args)
     {
         std::println("Errors in arguments cant execute");
     }
-    else{
+    else if (!force_break) {    
         file_handler.run();
     }
 }

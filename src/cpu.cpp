@@ -43,14 +43,14 @@ class simulator{
         }
         auto BSA(uint16_t Adr,bool indirect)
         {
-            ram[Adr]=PC;//store PC to Adr
-            BUN(Adr+1,indirect);//bun to adr+1
+            ram[indirect?ram[Adr]:Adr]=PC;//store PC to Adr
+            PC = ram[indirect?ram[Adr]:Adr]+1;
         }
         inline  auto ISZ(uint16_t Adr,bool indirect)
         {
             PC+=(++(indirect?ram[ram[Adr]]:ram[Adr]))==0?1:0;
         }
-        auto register_reference(uint16_t Instruction)
+        auto register_reference()
         {
             switch(IR)
             {
@@ -146,7 +146,7 @@ class simulator{
                 command=static_cast<uint8_t>(IR>>12);//to get top 4 bits
                 if(command==0x7)
                 {
-                    register_reference(IR);
+                    register_reference();
                     continue;
                 }
                 if(command==0xF)

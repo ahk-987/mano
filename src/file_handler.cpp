@@ -111,18 +111,16 @@ auto file_io::load_instruction_to_ram() {
                             ? static_cast<std::istream &>(hexcode_stream)
                             : static_cast<std::istream &>(file);
   while ((input >> generalstr)) {
-    if (generalstr.starts_with('O')) {
-      std::istringstream temp(generalstr);
-      temp >> generalstr;
+    
       if (generalstr == "ORG" ) {
-        temp >> std::hex >> generaluint16; // set location counter to ORG
-        temp >> std::dec;
-      }
-      curr_mem_pointer =
-          generaluint16 >= memory::ram_size - 1
-              ? throw std::out_of_range("Origin can not be at last index!!")
-              : generaluint16;
-      continue;
+        input >> std::hex >> generaluint16; // set location counter to ORG
+        input >> std::dec;
+      
+        curr_mem_pointer =
+            generaluint16 >= memory::ram_size - 1
+                ? throw std::out_of_range("Origin can not be at last index!!")
+                : generaluint16;
+        continue;
     }
     try {
       generaluint16 =
@@ -174,7 +172,7 @@ auto file_io::input_from_file() {
   std::string generalstr_pass,filenm = input_file;
   std::stringstream stdinput; // store input from cli for future parsing
   auto assembly_file_stream = std::ifstream(filenm);
-  if (stdio_only) // get user input and save it to a stream for doing parsing
+  if (stdio_only||input_file.empty()) // get user input and save it to a stream for doing parsing
   {
     std::println("Enter Your assembly Code Below [Use ctrl+d to complete]: ");
     while (std::getline(std::cin, generalstr)) {
@@ -191,6 +189,7 @@ auto file_io::input_from_file() {
   /*First Pass of assembler*/
     uint16_t curr_mem_pointer=0;
     bool end_pass_bool=true;
+    bool valid_line;
     std::unordered_map<std::string, uint16_t> labels;
     std::stringstream str_line_stream;
     while(std::getline(assembly,generalstr_pass)&&end_pass_bool)
@@ -259,9 +258,14 @@ auto file_io::input_from_file() {
             }
 
           }
+          else{
+            valid_line=true;
+          }
         }
 
-       curr_mem_pointer++;//increase LC 
+       if(valid_line)curr_mem_pointer++;
+       //increase LC if valid line 
+       valid_line=false;
     }
     if(std::any_of( labels.begin(), labels.end(),
     [](const auto& p) { return p.second == 0xFFFF; }))
@@ -340,7 +344,7 @@ auto file_io::input_from_file() {
                 std::println("Error invalid Address at index retelling from second pass: {}",curr_mem_pointer);
               }
               else{
-                hexcode_stream<<"ORG"<<std::hex<<templocint<<std::dec<<'\n';
+                hexcode_stream<<"ORG "<<std::hex<<templocint<<std::dec<<'\n';
                 curr_mem_pointer=templocint;
               }
           }
@@ -374,6 +378,9 @@ auto file_io::input_from_file() {
               gen_hexcode=static_cast<uint16_t>(temp_result);//store dec value 
               valid_instruction=true;
             }
+            else{
+              std::println("Invalid DEC value is provided");
+            }
           }
           else      //all other cases like labels and invalid somehow
           {
@@ -394,6 +401,10 @@ auto file_io::input_from_file() {
           curr_mem_pointer++;
         }
         valid_instruction=false;
+      }
+      if(!hlt_found_chk)
+      {
+        std::println("Warning: Halt Not Found in code!!");
       }
 
 }
