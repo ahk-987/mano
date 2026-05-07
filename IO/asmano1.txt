@@ -1,4 +1,27 @@
-CLA
-inc
-hlt
-org 100 ;this is a comment
+; ============================================================
+; Mano CLI — Example Assembly File
+; ============================================================
+; To run this example:
+;
+;   ./build/mano -i IO/asmano1.txt -o IO/ramstate.txt -r IO/registers.txt
+;
+; Output will be written to:
+;   IO/ramstate.txt   — final RAM state after execution
+;   IO/registers.txt  — final register values after execution
+;
+; To view output directly in terminal instead of files:
+;   ./build/mano -i IO/asmano1.txt 
+;   ;It will show the output in terminal as default
+; ============================================================
+
+; --- Example Program : Adds two numbers (5 + 3) and stores result ---
+
+        ORG 0
+        LDA X       ; load X into AC
+        ADD Y       ; AC = X + Y
+        STA Z       ; store result in Z
+        HLT
+X,      DEC 5       ; first operand
+Y,      DEC 3       ; second operand
+Z,      DEC 0       ; result will be stored here
+        END

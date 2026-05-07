@@ -1,1 +1,4 @@
-[LOC ]	[HEX]	[DECI]
+;This Will be overwritten when you execute 
+;It is meant to be a file that is written on 
+;Its content is lost when program runs and is overwritten
+;similar to registers.txt

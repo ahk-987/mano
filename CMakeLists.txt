@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 4.2.1 FATAL_ERROR )
 project(mano
-    VERSION 0.0.1
-    LANGUAGES CXX ASM
+    VERSION 1.0
+    LANGUAGES CXX 
     DESCRIPTION "mano"
 )
 add_executable(mano)
@@ -18,10 +18,6 @@ target_compile_features ( mano PRIVATE
 
 target_compile_options ( mano PRIVATE
     $<$<CXX_COMPILER_ID:Clang>: 
-    # this now only works for the clang compiler
-        
-        #-Werror
-        #-Weverything
         -Wno-c++98-compat # disable the warning for C++98 compatibility
         -Wno-c++98-compat-pedantic # disable the warning for c++98 violations
     >

@@ -65,7 +65,7 @@ class simulator{
                     AC=(~AC);
                     break;
                 case 0x7100://CME
-                    E=(~E);
+                    E=(!E);
                     break;
                 case 0x7080://CIR
                     AC=(AC>>1)+(E?0x8000:0);

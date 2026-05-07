@@ -14,7 +14,7 @@ auto parser::help()
     std::println("-o \t [eg:ramstate.txt] \t file to store ram state");
     std::println("\t-oa \t \t To show all ram (Normally only non zero locations)");
     std::println("-r \t [eg:register.txt] \t file to store register state");
-    std::println("-c \t [eg:hexcode.txt] \t file to store hexcode genereated from assembly file");
+    // std::println("-c \t [eg:hexcode.txt] \t file to store hexcode genereated from assembly file");
     // std::println("-e \t [error_store.txt] \t file to store errors? ");
     std::println("--stdio-only \t \t force all IO to be in stdin and stdio only");
     std::println("-h / --help \t \t See this help");
@@ -53,7 +53,7 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
                     }
                     else{
                         improper_args=true;
-                        std::println("Missing Argument for input file");
+                        std::println(std::cerr,"Missing Argument for input file");
                     }
                     break;
                     /* 
@@ -72,7 +72,7 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
                     }
                     else{
                         improper_args=true;
-                        std::println("Missing Argument for output file");
+                        std::println(std::cerr,"Missing Argument for output file");
                     }
                     break;
                     
@@ -83,7 +83,7 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
                     }
                     else{
                         improper_args=true;
-                        std::println("Missing Argument for registry file");
+                        std::println(std::cerr,"Missing Argument for registry file");
                     }
                     break;
                     
@@ -94,7 +94,7 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
                     }
                     else{
                         improper_args=true;
-                        std::println("Missing Argument for error file");
+                        std::println(std::cerr,"Missing Argument for error file");
                     }
                     break;
                 case 'c': 
@@ -104,7 +104,7 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
                     }
                     else{
                         improper_args=true;
-                        std::println("Missing Argument for Hexcode file");
+                        std::println(std::cerr,"Missing Argument for Hexcode file");
                     }
                     break;
                 case 'h':
@@ -122,7 +122,7 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
                         force_break=true;
                     }
                     else{
-                        std::println("Improper Argument: {}",args[i]);
+                        std::println(std::cerr,"Improper Argument: {}",args[i]);
                         help();
                         force_break=true;
                     }
@@ -139,7 +139,7 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
     }   
     if(improper_args)
     {
-        std::println("Errors in arguments cant execute");
+        std::println(std::cerr,"Errors in arguments cant execute");
     }
     else if (!force_break) {    
         file_handler.run();

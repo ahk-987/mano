@@ -60,6 +60,10 @@ file_io::file_io(simulator &cpu, memory &ram):cpu(cpu),ram(ram) {
 auto file_io::registry_to_file() {
   auto file = std::ofstream(register_file);
   auto &regfile = (stdio_only||register_file.empty()) ? std::cout:file;
+  if(stdio_only||register_file.empty())
+  {
+    regfile << "Registers :"<<std::endl;
+  }
   regfile << std::hex << "IR  : " << cpu.IR << std::endl;
   regfile << "AC  : " << cpu.AC << std::endl;
   regfile << "AR  : " << cpu.AR << std::endl;
@@ -71,10 +75,9 @@ auto file_io::registry_to_file() {
   }
 }
 auto file_io::ram_to_file() {
-  std::string loc_ram_state;
   std::ofstream file(output_file);
   auto &output = (stdio_only||output_file.empty()) ? std::cout:file;
-  if (stdio_only) {
+  if (stdio_only||output_file.empty()) {
     output << "\t  RAM  \t " << (all_ram_loc ? "[  all  ]" : "[not all]")
            << std::endl;
   }
@@ -114,9 +117,6 @@ auto file_io::load_instruction_to_ram() {
               std::println(std::cerr, "Invalid hex token (bad characters): {}", generalstr);
               continue;
           }
-
-          // check 2 — does the value actually fit in 16 bits?
-          // this catches user-edited hexcode files with values like "1FFFF"
           if (raw_value > 0xFFFF || raw_value < 0) {
               std::println(std::cerr, "Value out of 16-bit range (max FFFF): {}", generalstr);
               continue;
@@ -208,7 +208,7 @@ auto file_io::input_from_file() {
               //Here i am checking if address passed in is in format or like proper 
               if((temp_ec_fpass!=std::errc())||temp_ptr_fpass-generalstr_pass.data()!=generalstr_pass.size()||(templocint>0xFFE))
               {
-                std::println("Error invalid Address at index : {}",curr_mem_pointer);
+                std::println(std::cerr,"Error invalid Address at index : {}",curr_mem_pointer);
               }
               else{
                 curr_mem_pointer=templocint;
@@ -242,7 +242,7 @@ auto file_io::input_from_file() {
               }
               if(!std::all_of(generalstr_pass.begin(),generalstr_pass.end(),[](unsigned char c){return std::isalnum(c)||c=='_';}))
               {
-                std::println("Invalid Label used at [{}] label used is {}",curr_mem_pointer,generalstr_pass);
+                std::println(std::cerr,"Invalid Label used at [{}] label used is {}",curr_mem_pointer,generalstr_pass);
               }
               if(chk_label_add_loc)
               {
@@ -319,7 +319,7 @@ auto file_io::input_from_file() {
               valid_instruction=true;
             }
             else{
-              std::println("Invalid label Provided for a MRI instruction[{}] at [{}] label found as [{}] ",generalstr_pass,line_number,adr_label);
+              std::println(std::cerr,"Invalid label Provided for a MRI instruction[{}] at [{}] label found as [{}] ",generalstr_pass,line_number,adr_label);
             }
           }
           else if(NON_MRI.contains(generalstr_pass))
@@ -340,7 +340,7 @@ auto file_io::input_from_file() {
               //Here i am checking if address passed in is in format or like proper 
               if((temp_ec_fpass!=std::errc())||temp_ptr_fpass-generalstr_pass.data()!=generalstr_pass.size()||(templocint>0xFFFE))
               {
-                std::println("Error invalid Address at index retelling from second pass: {}",line_number);
+                std::println(std::cerr,"Error invalid Address at index retelling from second pass: {}",line_number);
               }
               else{
                 hexcode_stream<<"ORG "<<std::hex<<templocint<<std::dec<<'\n';
@@ -363,7 +363,7 @@ auto file_io::input_from_file() {
               valid_instruction=true;
             }
             else{
-              std::println("Invalid HEX Value is provided");
+              std::println(std::cerr,"Invalid HEX Value is provided");
             }
           }
           else if(generalstr_pass=="DEC")
@@ -378,7 +378,7 @@ auto file_io::input_from_file() {
               valid_instruction=true;
             }
             else{
-              std::println("Invalid DEC value is provided");
+              std::println(std::cerr,"Invalid DEC value is provided");
             }
           }
           else      //all other cases like labels and invalid somehow
@@ -386,7 +386,7 @@ auto file_io::input_from_file() {
             generalstr_pass.back()==','?generalstr_pass.pop_back():void();
             if(labels.contains(generalstr_pass)&&labels.at(generalstr_pass)==(0xFFFF))
             {
-              std::println("The following label is undefined [{}] at [{}]",generalstr_pass,line_number);
+              std::println(std::cerr,"The following label is undefined [{}] at [{}]",generalstr_pass,line_number);
             }
             else if(!labels.contains(generalstr_pass))
             {
