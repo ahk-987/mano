@@ -25,7 +25,11 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
 {
     bool improper_args=false;
     bool force_break=false;
-    if(kwargs<2) return;
+    if(kwargs<2) 
+    {
+        file_handler.run();
+        return;
+    }
     for(int i = 1;i<kwargs;i++)
     {
         if(force_break)
