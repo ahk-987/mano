@@ -1,6 +1,7 @@
 #include "../header/Cli_parser.hpp"
 #include <cstring>
 #include <print>
+#include <stdexcept>
 
 auto parser::error(std::string errorstr)
 {
@@ -38,7 +39,13 @@ parser::parser(int kwargs, char *args[]):ram(),cpu(0,ram),file_handler(cpu,ram)
                 case 'i':
                     if(i+1<kwargs&&args[i+1][0]!='-')
                     {
-                        file_handler.set_files_nm(args[++i], file_io::INPUT_FILE);
+                        try{
+                            file_handler.set_files_nm(args[++i], file_io::INPUT_FILE);
+                        }catch(std::runtime_error &e)
+                        {
+                            std::println(std::cerr,"Error : {}",e.what());
+                            improper_args=true;
+                        }
                     }
                     else{
                         improper_args=true;

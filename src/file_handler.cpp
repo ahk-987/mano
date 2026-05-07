@@ -11,6 +11,7 @@
 #include <istream>
 #include <print>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <unordered_map>
@@ -58,7 +59,7 @@ file_io::file_io(simulator &cpu, memory &ram):cpu(cpu),ram(ram) {
 
 auto file_io::registry_to_file() {
   auto file = std::ofstream(register_file);
-  auto &regfile = stdio_only ? std::cout:file;
+  auto &regfile = (stdio_only||register_file.empty()) ? std::cout:file;
   regfile << std::hex << "IR  : " << cpu.IR << std::endl;
   regfile << "AC  : " << cpu.AC << std::endl;
   regfile << "AR  : " << cpu.AR << std::endl;
@@ -70,10 +71,9 @@ auto file_io::registry_to_file() {
   }
 }
 auto file_io::ram_to_file() {
-  std::string formattedstr;
   std::string loc_ram_state;
   std::ofstream file(output_file);
-  auto &output = stdio_only ? std::cout:file;
+  auto &output = (stdio_only||output_file.empty()) ? std::cout:file;
   if (stdio_only) {
     output << "\t  RAM  \t " << (all_ram_loc ? "[  all  ]" : "[not all]")
            << std::endl;
@@ -81,21 +81,7 @@ auto file_io::ram_to_file() {
   output << "[LOC ]\t[HEX]\t[DECI]\n";
   for (int loc = 0; loc < memory::ram_size; loc++) {
     if (ram[loc]) {
-      formattedstr =
-          (loc / 10 ? loc / 100 ? loc / 1000 ? "" : "0" : "00" : "000");
-      output << "[" << formattedstr << loc << "]\t";
-      formattedstr =
-          (ram[loc] / 16 ? (ram[loc] / 256 ? ram[loc] / 4096 ? "" : "0" : "00")
-                         : "000");
-      output << std::hex << formattedstr << ram[loc] << "\t";
-      output << std::dec;
-      formattedstr =
-          (ram[loc] / 10
-               ? ram[loc] / 100
-                     ? ram[loc] / 1000 ? ram[loc] / 10000 ? "" : "0" : "00"
-                     : "000"
-               : "0000");
-      output << formattedstr << ram[loc] << "\n";
+      output << std::format("[{:04}]\t{:04X}\t{:05}\n", loc, ram[loc], ram[loc]);
     } else if (all_ram_loc) {
       output << "[" << loc << "]" << "0000";
     }
@@ -107,7 +93,7 @@ auto file_io::ram_to_file() {
 auto file_io::load_instruction_to_ram() {
   uint16_t curr_mem_pointer = 0;
   auto file = std::fstream(hexcode_file);
-  std::istream &input = stdio_only
+  std::istream &input = (stdio_only||hexcode_file.empty())
                             ? static_cast<std::istream &>(hexcode_stream)
                             : static_cast<std::istream &>(file);
   while ((input >> generalstr)) {
@@ -146,7 +132,7 @@ auto file_io::set_files_nm(std::string filenm, filetype type) -> void {
     break;
   case INPUT_FILE:
     if (!std::filesystem::exists(filenm)) {
-      throw std::string("This File does not Exist : "+filenm);
+      throw std::runtime_error("This File does not Exist : "+filenm);
     }
     input_file = filenm;
     break;
@@ -164,7 +150,7 @@ auto file_io::set_files_nm(std::string filenm, filetype type) -> void {
     error_file = filenm;
     break;
   default:
-    std::println("Nani???IS this possible");
+    std::println(std::cerr, "Internal error: unknown file type"); 
   }
 }
 
@@ -283,6 +269,7 @@ auto file_io::input_from_file() {
     bool valid_instruction=false;
     std::string adr_label,tempstr;
     uint16_t gen_hexcode;
+    int line_number=0;
     assembly.clear();
     assembly.seekg(0);
     hexcode_stream=std::stringstream();//empty init to use now
@@ -290,6 +277,7 @@ auto file_io::input_from_file() {
     curr_mem_pointer=0;//reset LC 
     while(std::getline(assembly,generalstr_pass)&&end_pass_bool)
     {
+        line_number++;
         std::transform(generalstr_pass.begin(),generalstr_pass.end(),generalstr_pass.begin(),[](unsigned char c ){return std::toupper(c);});
 
         gen_hexcode=0;
@@ -320,7 +308,7 @@ auto file_io::input_from_file() {
               valid_instruction=true;
             }
             else{
-              std::println("Invalid label Provided for a MRI instruction[{}] at [{}] label found as [{}] ",generalstr_pass,curr_mem_pointer,adr_label);
+              std::println("Invalid label Provided for a MRI instruction[{}] at [{}] label found as [{}] ",generalstr_pass,line_number,adr_label);
             }
           }
           else if(NON_MRI.contains(generalstr_pass))
@@ -341,7 +329,7 @@ auto file_io::input_from_file() {
               //Here i am checking if address passed in is in format or like proper 
               if((temp_ec_fpass!=std::errc())||temp_ptr_fpass-generalstr_pass.data()!=generalstr_pass.size()||(templocint>0xFFFE))
               {
-                std::println("Error invalid Address at index retelling from second pass: {}",curr_mem_pointer);
+                std::println("Error invalid Address at index retelling from second pass: {}",line_number);
               }
               else{
                 hexcode_stream<<"ORG "<<std::hex<<templocint<<std::dec<<'\n';
@@ -387,11 +375,11 @@ auto file_io::input_from_file() {
             generalstr_pass.back()==','?generalstr_pass.pop_back():void();
             if(labels.contains(generalstr_pass)&&labels.at(generalstr_pass)==(0xFFFF))
             {
-              std::println("The following label is undefined [{}] at [{}]",generalstr_pass,curr_mem_pointer);
+              std::println("The following label is undefined [{}] at [{}]",generalstr_pass,line_number);
             }
             else if(!labels.contains(generalstr_pass))
             {
-              std::println("How ,this is a label that is met with the first time [{}]",generalstr_pass);
+              std::println(std::cerr, "Line {}: Unknown token [{}]", line_number, generalstr_pass);   
             }
             //no else case that case is simply the labels is normal and exists
           }
@@ -417,7 +405,6 @@ void file_io::run()
 {
   input_from_file();
   load_instruction_to_ram();
-  ram_to_file();
   registry_to_file();
   cpu.run();
   ram_to_file();

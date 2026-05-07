@@ -2,6 +2,7 @@
 #define CPU_CPP_FILE
 
 #include "mymemory.hpp"
+#include <iostream>
 #include <print>
 class simulator{
  
@@ -95,8 +96,8 @@ class simulator{
                     hlt=1;
                     break;
                 default:
-                std::println("Why are You here !! :this is default of regref");
-                
+                    std::println(std::cerr, "Internal error: unknown register reference opcode {:04X}", IR);
+
             }
         }
         auto memory_reference(uint8_t command,uint16_t AR,bool indirect)
@@ -125,7 +126,7 @@ class simulator{
                         ISZ(AR,indirect);
                         break;
                     default:
-                        std::println("Why are You here ? memref default");
+                        std::println(std::cerr, "Internal error: unknown memory reference opcode {:X}", command);
                 }
     
         }
