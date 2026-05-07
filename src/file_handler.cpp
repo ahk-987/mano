@@ -107,21 +107,27 @@ auto file_io::load_instruction_to_ram() {
                 ? throw std::out_of_range("Origin can not be at last index!!")
                 : generaluint16;
         continue;
-    }
-    try {
-      generaluint16 =
-          static_cast<uint16_t>(std::stoi(generalstr, &generalulong, 16));
-      ram[curr_mem_pointer++] = generaluint16;
-      if (generalulong != 4) {
-        std::println("Not Hex Value at Line : {},index :{} ,value found :{}",
-                     curr_mem_pointer, generalulong, generalstr);
+          }try {
+          int raw_value = std::stoi(generalstr, &generalulong, 16);
+
+          if (generalulong != generalstr.size()) {
+              std::println(std::cerr, "Invalid hex token (bad characters): {}", generalstr);
+              continue;
+          }
+
+          // check 2 — does the value actually fit in 16 bits?
+          // this catches user-edited hexcode files with values like "1FFFF"
+          if (raw_value > 0xFFFF || raw_value < 0) {
+              std::println(std::cerr, "Value out of 16-bit range (max FFFF): {}", generalstr);
+              continue;
+          }
+
+          ram[curr_mem_pointer++] = static_cast<uint16_t>(raw_value);
+
+      } catch (std::exception& e) {
+          std::println(std::cerr, "Error parsing hex token '{}': {}", generalstr, e.what());
+          break;
       }
-    } catch (std::exception e) {
-      file.close();
-      std::cout << "Error while parsing text !!" << std::endl
-                << e.what() << std::endl;
-      break;
-    }
   }
 }
 
@@ -212,6 +218,11 @@ auto file_io::input_from_file() {
             {
               end_pass_bool=false;
             }
+          else if ( generalstr_pass=="DEC"||generalstr_pass=="HEX")
+          {
+            str_line_stream>>generalstr_pass;
+            valid_line=true;
+          }
           else {
               bool chk_label_add_loc=false;
               if(generalstr_pass.ends_with(',')){
@@ -256,7 +267,7 @@ auto file_io::input_from_file() {
     if(std::any_of( labels.begin(), labels.end(),
     [](const auto& p) { return p.second == 0xFFFF; }))
     {
-      std::println("There are undefined Labels in the {} code",stdio_only?"assembly entered":"file:"+input_file);
+      std::println(std::cerr,"There are undefined Labels in the {} code",(stdio_only||input_file.empty())?"assembly entered":"file:"+input_file);
     }
 
     /*End First Pass */
@@ -392,7 +403,7 @@ auto file_io::input_from_file() {
       }
       if(!hlt_found_chk)
       {
-        std::println("Warning: Halt Not Found in code!!");
+        std::println(std::cerr,"Warning: Halt Not Found in code!!");
       }
 
 }
@@ -405,7 +416,6 @@ void file_io::run()
 {
   input_from_file();
   load_instruction_to_ram();
-  registry_to_file();
   cpu.run();
   ram_to_file();
   registry_to_file();
